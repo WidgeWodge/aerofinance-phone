@@ -1,7 +1,7 @@
 // Keeps the app working offline, and receives the summaries the PC pushes.
 // The browser decrypts each message before it gets here; only this phone can read it.
 
-const SHELL = 'aerofinance-shell-v1';
+const SHELL = 'aerofinance-shell-v3';
 const DATA = 'aerofinance-data';
 const FILES = ['./', './index.html', './app.js', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
@@ -50,8 +50,9 @@ self.addEventListener('push', (event) => {
 
     const bills = (snapshot.bills || []).length;
     const headline = snapshot.safe >= 0 ? `${money(snapshot.weekly)} a week to spend` : `${money(Math.abs(snapshot.safe))} short before payday`;
+    const overdue = (snapshot.stmt || []).find(a => a.at && (Date.now() - new Date(a.at).getTime()) / 86400000 > 7);
     await self.registration.showNotification('Budget updated', {
-      body: `${headline} · ${bills} bill${bills === 1 ? '' : 's'} to come`,
+      body: `${headline} · ${bills} bill${bills === 1 ? '' : 's'} to come${overdue ? ` · ${overdue.n} needs a statement` : ''}`,
       tag: 'aerofinance-update',
       renotify: false,
       silent: true,

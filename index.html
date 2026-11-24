@@ -30,6 +30,9 @@
     li:first-child { border-top: 0; }
     .when { color: var(--muted); font-size: .85rem; display: block; margin-top: 2px; }
     .amt { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+    .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 6px; }
+    .bar > span { display: block; height: 100%; border-radius: 3px; }
+    li.pace { display: block; }
     .total { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 10px; margin-top: 4px; color: var(--muted); }
     h2 { font-size: 1rem; margin: 0; }
     p { line-height: 1.45; }
@@ -46,6 +49,7 @@
 <body>
   <h1>AeroFinance</h1>
   <p id="synced" class="synced">Not synced yet</p>
+  <p id="stmtLine" class="synced" hidden></p>
 
   <main id="figures" hidden>
     <section class="panel" aria-label="Weekly spending">
@@ -54,10 +58,15 @@
       <div class="row">
         <div><p class="label">Spent this week</p><p class="val" id="spentWeek"></p></div>
         <div><p class="label" id="safeLabel">Left until payday</p><p class="val" id="safe"></p></div>
-        <div id="payBox"><p class="label">Next pay, about</p><p class="val" id="pay"></p></div>
+        <div id="payBox"><p class="label" id="payLabel">Next pay, about</p><p class="val" id="pay"></p></div>
       </div>
       <p class="note" id="nextLine" hidden></p>
       <p class="note warn" id="noteLine" hidden></p>
+    </section>
+
+    <section class="panel" aria-label="Food and fuel" id="paceBox" hidden>
+      <h2>This pay period so far</h2>
+      <ul id="pace"></ul>
     </section>
 
     <section class="panel" aria-label="Bills still to come">

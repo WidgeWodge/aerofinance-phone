@@ -5,6 +5,7 @@ const $ = (id) => document.getElementById(id);
 const DATA = 'aerofinance-data';
 const money = (n) => `£${Number(n || 0).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const day = (iso) => (iso ? new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) : null);
+const dm = (iso) => { const [, m, d] = iso.split('-'); return `${Number(d)}/${Number(m)}`; };
 const stamp = (iso) => new Date(iso).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 async function readCached(name) {
@@ -21,23 +22,69 @@ function showSnapshot(s) {
   synced.classList.toggle('old', ageHours > 36);
 
   const short = s.safe < 0;
-  $('weeklyLabel').textContent = short ? 'Short before payday' : 'Spare, per week';
-  $('weekly').textContent = money(short ? Math.abs(s.safe) : s.weekly);
+  // This week's dates, matching My money: up to the start of next week, or payday.
+  const wk = !short && s.wk;
+  $('weeklyLabel').textContent = short ? 'Short before payday' : wk ? `Spare this week, ${dm(wk.f)} to ${dm(wk.t)}` : 'Spare, per week';
+  $('weekly').textContent = money(short ? Math.abs(s.safe) : wk ? wk.a : s.weekly);
   $('weekly').className = `big ${short ? 'short' : 'good'}`;
   $('spentWeek').textContent = money(s.spentWeek);
   $('safeLabel').textContent = short ? 'Short by' : 'Left until payday';
   $('safe').textContent = money(Math.abs(s.safe));
   $('safe').className = `val ${short ? 'short' : ''}`;
   $('payBox').hidden = !s.pay;
+  $('payLabel').textContent = s.paySet ? 'Next pay' : 'Next pay, about';
   $('pay').textContent = s.pay ? `${day(s.pay)}${s.payAmount ? ` · ${money(s.payAmount)}` : ''}` : '';
 
   const next = s.next;
   $('nextLine').hidden = !next;
   if (next) $('nextLine').textContent = next.safe >= 0
-    ? `After payday: about ${money(next.weekly)} a week until ${day(next.pay) || 'the following pay'}.`
+    ? `After payday: about ${money(next.weekly)} a week${next.from ? ` from ${dm(next.from)}` : ''} until ${day(next.pay) || 'the following pay'}.`
     : `After payday: about ${money(Math.abs(next.safe))} short before the following pay.`;
   $('noteLine').hidden = !s.note;
   $('noteLine').textContent = s.note || '';
+
+  // How current the statement accounts are: a week without an import is flagged.
+  const stmt = (s.stmt || []).filter(a => a.at);
+  $('stmtLine').hidden = stmt.length === 0;
+  if (stmt.length) {
+    const worst = stmt.map(a => ({ n: a.n, days: Math.floor((Date.now() - new Date(a.at).getTime()) / 86400000) })).sort((a, b) => b.days - a.days)[0];
+    $('stmtLine').textContent = `${worst.n} last updated ${worst.days <= 0 ? 'today' : `${worst.days} day${worst.days === 1 ? '' : 's'} ago`}${worst.days > 7 ? ', so bills from it may be out of date' : ''}`;
+    $('stmtLine').classList.toggle('old', worst.days > 7);
+  }
+
+  const pace = (s.regular || []).filter(r => r.b > 0);
+  $('paceBox').hidden = pace.length === 0;
+  const paceList = $('pace');
+  paceList.replaceChildren();
+  pace.forEach(r => {
+    const li = document.createElement('li');
+    li.className = 'pace';
+    const top = document.createElement('div');
+    top.style.display = 'flex';
+    top.style.justifyContent = 'space-between';
+    const name = document.createElement('span');
+    name.textContent = r.n;
+    const amt = document.createElement('span');
+    amt.className = 'amt';
+    amt.textContent = `${money(r.s)} of ${money(r.b)}`;
+    top.append(name, amt);
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    const fill = document.createElement('span');
+    const colour = r.st === 'on track' ? 'var(--green)' : r.st === 'ahead' ? 'var(--amber)' : 'var(--rose)';
+    fill.style.width = `${Math.min(100, (r.s / r.b) * 100)}%`;
+    fill.style.background = colour;
+    bar.appendChild(fill);
+    const note = document.createElement('span');
+    note.className = 'when';
+    note.style.color = colour;
+    const left = r.b - r.s;
+    note.textContent = r.st === 'over' ? `${money(Math.abs(left))} over budget`
+      : r.st === 'ahead' ? `Spending faster than planned: ${money(left)} left for ${r.dl} day${r.dl === 1 ? '' : 's'}`
+      : `On track: ${money(left)} left for ${r.dl} day${r.dl === 1 ? '' : 's'}`;
+    li.append(top, bar, note);
+    paceList.appendChild(li);
+  });
 
   const list = $('bills');
   list.replaceChildren();
