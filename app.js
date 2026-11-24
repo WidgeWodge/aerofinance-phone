@@ -40,8 +40,10 @@ function showSnapshot(s) {
   if (next) $('nextLine').textContent = next.safe >= 0
     ? `After payday: about ${money(next.weekly)} a week${next.from ? ` from ${dm(next.from)}` : ''} until ${day(next.pay) || 'the following pay'}.`
     : `After payday: about ${money(Math.abs(next.safe))} short before the following pay.`;
-  $('noteLine').hidden = !s.note;
-  $('noteLine').textContent = s.note || '';
+  const assumed = s.ap ? `Pay of ${money(s.ap.a)} counted as arrived on ${day(s.ap.d)}, until a statement shows it.` : '';
+  const notes = [assumed, s.note].filter(Boolean).join(' ');
+  $('noteLine').hidden = !notes;
+  $('noteLine').textContent = notes;
 
   // How current the statement accounts are: a week without an import is flagged.
   const stmt = (s.stmt || []).filter(a => a.at);
