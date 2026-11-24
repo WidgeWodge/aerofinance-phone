@@ -52,6 +52,23 @@ function showSnapshot(s) {
     $('stmtLine').classList.toggle('old', worst.days > 7);
   }
 
+  // Problems that need doing something about, and the round-up after payday.
+  const alerts = s.al || [];
+  $('alertBox').hidden = alerts.length === 0;
+  const alertList = $('alerts');
+  alertList.replaceChildren();
+  alerts.forEach(a => {
+    const li = document.createElement('li');
+    li.className = `alert${a.r ? '' : ' problem'}`;
+    const title = document.createElement('strong');
+    title.textContent = a.t;
+    const text = document.createElement('span');
+    text.className = 'when';
+    text.textContent = a.x;
+    li.append(title, text);
+    alertList.appendChild(li);
+  });
+
   const pace = (s.regular || []).filter(r => r.b > 0);
   $('paceBox').hidden = pace.length === 0;
   const paceList = $('pace');
@@ -94,7 +111,7 @@ function showSnapshot(s) {
     left.textContent = b.n;
     const when = document.createElement('span');
     when.className = `when${b.late ? ' late' : ''}`;
-    when.textContent = b.late ? `Late, was due ${day(b.d)}` : b.d ? `Due ${day(b.d)}` : 'Date not known yet';
+    when.textContent = b.late ? `Late, was due ${day(b.d)}` : b.k ? 'Kept aside, stays in your account' : b.d ? `Due ${day(b.d)}` : 'Date not known yet';
     left.appendChild(when);
     const amt = document.createElement('span');
     amt.className = 'amt';

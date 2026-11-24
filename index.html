@@ -33,6 +33,13 @@
     .bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 6px; }
     .bar > span { display: block; height: 100%; border-radius: 3px; }
     li.pace { display: block; }
+    li.alert { display: block; }
+    #alerts { margin-top: 0; }
+    #alerts li.alert:first-child { padding-top: 0; border-top: 0; }
+    #alerts li.alert:last-child { padding-bottom: 0; }
+    li.alert strong { display: block; font-weight: 600; }
+    li.alert .when { margin-top: 2px; }
+    li.alert.problem strong { color: var(--amber); }
     .total { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 10px; margin-top: 4px; color: var(--muted); }
     h2 { font-size: 1rem; margin: 0; }
     p { line-height: 1.45; }
@@ -52,6 +59,10 @@
   <p id="stmtLine" class="synced" hidden></p>
 
   <main id="figures" hidden>
+    <section class="panel" aria-label="Needs attention" id="alertBox" hidden>
+      <ul id="alerts"></ul>
+    </section>
+
     <section class="panel" aria-label="Weekly spending">
       <p class="label" id="weeklyLabel">Spare, per week</p>
       <p class="big" id="weekly"></p>
