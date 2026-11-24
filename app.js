@@ -112,6 +112,7 @@ function showSnapshot(s) {
     const when = document.createElement('span');
     when.className = `when${b.late ? ' late' : ''}`;
     when.textContent = b.late ? `Late, was due ${day(b.d)}` : b.k ? 'Kept aside, stays in your account' : b.d ? `Due ${day(b.d)}` : 'Date not known yet';
+    if (b.p) when.textContent += b.a < 0.005 ? ' · paid from your pot' : ` · ${money(b.p)} from your pot`;
     left.appendChild(when);
     const amt = document.createElement('span');
     amt.className = 'amt';
